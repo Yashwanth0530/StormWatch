@@ -12,7 +12,7 @@ import wind_icon from '../assets/wind.png'
 
 const Weather = () => {
 
-    const inputRef = useRef
+    const inputRef = useRef(null)
     const [weatherData, setWeatherData] = useState(false);
 
     const allIcons = {
@@ -33,10 +33,17 @@ const Weather = () => {
     }
 
     const search = async (city) => {
+        if(city === ""){
+            alert("Please enter a city name");
+        }
         try {
             const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${import.meta.env.VITE_APP_ID}&units=metric`;
             const response = await fetch (url);
             const data = await response.json();
+            if(!response.ok){
+                alert(data.message);
+                return;
+            }
             console.log(data);
             const icon = allIcons[data.weather[0].icon] || clear_icon;
             setWeatherData({
@@ -48,6 +55,7 @@ const Weather = () => {
             })
         }
         catch(error){
+            setWeatherData(false);
             console.log("Error fetching data", error);
         }
     }
@@ -57,9 +65,14 @@ const Weather = () => {
     return (
         <div className='weather'>
             <div className="search-bar">
-                <input ref={inputRef} type='text' placeholder='Search'/>
+                <input ref={inputRef} type='text' placeholder='Search' onKeyDown={(e) => {
+                    if(e.key === "Enter"){
+                        search(inputRef.current.value);
+                    }
+                }}/>
                 <img src={search_icon} alt='' onClick={() =>search(inputRef.current.value)} />
             </div>
+            {weatherData?<>
             <img src= {weatherData.icon} alt='Weather' className='weather-icon'/>
             <p className='temperature'>{weatherData.temperature} °c</p>
             <p className='location'>{weatherData.location}</p>
@@ -75,12 +88,15 @@ const Weather = () => {
                     <div className="col">
                         <img src={wind_icon}></img>
                         <div>
-                            <p>{weatherData.windSpeed} kmph</p>
+                            <p>{weatherData.windSpeed} Km/h</p>
                             <span>Wind Speed</span>
                         </div>
                     </div>
                 </div>
             </div>
+            
+            </>:<></>}
+            
         </div>
     )
 };
