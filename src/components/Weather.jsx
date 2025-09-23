@@ -59,9 +59,47 @@ const Weather = () => {
             console.log("Error fetching data", error);
         }
     }
+    const searchByCoordinates = async (lat, lon) => {
+    try {
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${import.meta.env.VITE_APP_ID}&units=metric`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (!response.ok) {
+            alert(data.message);
+            return;
+        }
+
+        const icon = allIcons[data.weather[0].icon] || clear_icon;
+        setWeatherData({
+            humidity: data.main.humidity,
+            windSpeed: data.wind.speed,
+            temperature: Math.floor(data.main.temp),
+            location: data.name,
+            icon: icon,
+        });
+    } catch (error) {
+        console.log("Error fetching location-based weather:", error);
+    }
+};
+
     useEffect(() => {
-        search("New Delhi");
-    },[])
+    // Ask for user's current location
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const { latitude, longitude } = position.coords;
+            // Fetch weather using coordinates
+            searchByCoordinates(latitude, longitude);
+        },
+        (error) => {
+            console.log(error);
+            console.log("Location access denied. Showing default city.");
+            search("Bengaluru"); // fallback if user blocks location
+        }
+    );
+}, []);
+
+
     return (
         <div className='weather'>
             <div className="search-bar">
